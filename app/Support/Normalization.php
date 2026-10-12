@@ -11,4 +11,9 @@ final class Normalization
     {
         return Str::upper(Str::squish($value));
     }
+
+    public static function reference(string $value): string
+    {
+        return preg_replace('/[^\p{L}\p{N}]/u', '', Str::upper($value));
+    }
 }

@@ -1,25 +1,79 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
-import { ArrowDownLeft, ArrowUpRight, ClipboardList, ArrowRight, FolderArchive } from 'lucide-vue-next';
-import ArchiveLayout from '@/layouts/ArchiveLayout.vue';
 import ArchivePageHeading from '@/components/ArchivePageHeading.vue';
-const sections = [
- { title: 'Receiving', description: 'Supplier paperwork, material certificates, and returns.', icon: ArrowDownLeft, links: [{ name: 'Vendor Packing Slips', slug: 'vendor-packing-slips' }, { name: 'Material Test Reports (MTRs)', slug: 'material-test-reports' }, { name: 'RMAs', slug: 'rmas' }] },
- { title: 'Shipping', description: 'Customer shipments and courier documentation.', icon: ArrowUpRight, links: [{ name: 'Customer Packing Slips', slug: 'customer-packing-slips' }, { name: 'Waybills', slug: 'waybills' }] },
- { title: 'Job Routers', description: 'Production paperwork, organized in its own archive.', icon: ClipboardList, links: [{ name: 'Job Routers', slug: 'job-routers' }] },
-];
+import DashboardCategories from '@/components/DashboardCategories.vue';
+import DashboardStatCard from '@/components/DashboardStatCard.vue';
+import DocumentTable from '@/components/DocumentTable.vue';
+import ArchiveLayout from '@/layouts/ArchiveLayout.vue';
+import type { SharedData } from '@/types';
+import type { FiledDocument } from '@/types/archive';
+import { Head, Link, usePage } from '@inertiajs/vue3';
+import { Archive, ArrowDownToLine, ChevronRight, Inbox, PackageCheck, Search, Upload } from 'lucide-vue-next';
+defineProps<{ stats: { filed: number; inbox: number; receiving: number; shipping: number; routers: number }; recentDocuments: FiledDocument[] }>();
+const page = usePage<SharedData>();
 </script>
 <template>
- <Head title="Dashboard" />
- <ArchiveLayout title="Dashboard">
-  <ArchivePageHeading title="A home for your paperwork." description="Keep receiving, shipping, and production records organized in one place. Choose a workspace to get started." eyebrow="Document workspace" />
-  <div class="mb-8 flex items-center gap-4 rounded-xl border border-teal-100 bg-teal-50 p-5"><FolderArchive class="shrink-0 text-teal-700" :size="24" /><div><h2 class="text-sm font-semibold text-teal-900">Your archive foundation is ready</h2><p class="mt-1 text-sm text-teal-800">Document uploads, filing, and search are coming in future releases.</p></div></div>
-  <div class="grid gap-5 xl:grid-cols-3">
-   <section v-for="section in sections" :key="section.title" class="rounded-xl border border-slate-200 bg-white p-6">
-    <span class="mb-6 inline-flex rounded-lg bg-slate-50 p-3 text-teal-700"><component :is="section.icon" :size="24" /></span><h2 class="text-lg font-semibold">{{ section.title }}</h2><p class="mt-2 min-h-12 text-sm leading-6 text-slate-500">{{ section.description }}</p>
-    <div class="mt-6 border-t border-slate-100 pt-3"><Link v-for="link in section.links" :key="link.slug" :href="'/archive/' + link.slug" class="flex items-center justify-between gap-3 rounded-lg py-3 text-sm text-slate-700 hover:text-teal-700">{{ link.name }}<ArrowRight :size="16" /></Link></div>
-   </section>
-  </div>
-  <div class="mt-8 grid gap-5 sm:grid-cols-2"><Link href="/inbox" class="rounded-xl border border-slate-200 bg-white p-6 hover:border-teal-300"><h2 class="font-semibold">Inbox <span class="ml-2 text-xs font-normal text-slate-400">Coming soon</span></h2><p class="mt-2 text-sm text-slate-500">Review incoming scans before they enter the archive.</p></Link><Link href="/search" class="rounded-xl border border-slate-200 bg-white p-6 hover:border-teal-300"><h2 class="font-semibold">Global Search <span class="ml-2 text-xs font-normal text-slate-400">Coming soon</span></h2><p class="mt-2 text-sm text-slate-500">Find paperwork by PO, job, invoice, or tracking reference.</p></Link></div>
- </ArchiveLayout>
+    <Head title="Dashboard" /><ArchiveLayout title="Dashboard"
+        ><ArchivePageHeading
+            :title="`Welcome back, ${page.props.auth.user.name.split(' ')[0]}`"
+            description="Here's what's happening in your document archive."
+            ><Link href="/inbox?upload=1" class="archive-button-primary"><Upload :size="15" />Upload documents</Link></ArchivePageHeading
+        >
+        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <DashboardStatCard
+                label="Total Filed Documents"
+                :value="stats.filed"
+                description="Across all archive categories"
+                :icon="Archive"
+            /><DashboardStatCard
+                label="Awaiting Review"
+                :value="stats.inbox"
+                description="Documents in the Inbox"
+                :icon="Inbox"
+                pending
+            /><DashboardStatCard
+                label="Receiving Documents"
+                :value="stats.receiving"
+                description="Filed receiving records"
+                :icon="ArrowDownToLine"
+            /><DashboardStatCard label="Shipping Documents" :value="stats.shipping" description="Filed shipping records" :icon="PackageCheck" />
+        </div>
+        <div class="mt-4 grid gap-4 xl:grid-cols-[1.1fr_1fr]">
+            <section class="archive-panel p-5">
+                <h2 class="text-sm font-semibold">Quick access</h2>
+                <p class="mt-1 text-[11px] text-muted-foreground">Common document workflows</p>
+                <Link
+                    v-for="action in [
+                        { title: 'Upload documents', description: 'Add scanned paperwork to the Inbox', href: '/inbox?upload=1', icon: Upload },
+                        {
+                            title: 'Search the archive',
+                            description: 'Find by PO, job, invoice, tracking, vendor, or filename',
+                            href: '/search',
+                            icon: Search,
+                        },
+                    ]"
+                    :key="action.href"
+                    :href="action.href"
+                    class="mt-3 flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-muted"
+                    ><span class="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary"
+                        ><component :is="action.icon" :size="17"
+                    /></span>
+                    <div class="flex-1">
+                        <h3 class="text-xs font-semibold">{{ action.title }}</h3>
+                        <p class="mt-1 text-[11px] text-muted-foreground">{{ action.description }}</p>
+                    </div>
+                    <ChevronRight :size="15" class="text-muted-foreground"
+                /></Link>
+            </section>
+            <DashboardCategories :stats="stats" />
+        </div>
+        <section class="archive-panel mt-4">
+            <div class="archive-panel-heading">
+                <div>
+                    <h2 class="text-sm font-semibold">Recent documents</h2>
+                    <p class="mt-1 text-[11px] text-muted-foreground">Recently filed across your workspace</p>
+                </div>
+                <Link href="/search" class="flex items-center gap-1 text-xs text-primary">View all<ChevronRight :size="13" /></Link>
+            </div>
+            <DocumentTable :documents="recentDocuments" variant="recent" /></section
+    ></ArchiveLayout>
 </template>

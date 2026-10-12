@@ -17,6 +17,7 @@ export interface NavItem {
 }
 
 export interface SharedData {
+    archiveCategories: Record<string, { name: string; label: string; href: string }>;
     [key: string]: unknown;
     name: string;
     quote: { message: string; author: string };

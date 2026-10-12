@@ -2,5 +2,11 @@
 defineProps<{ title: string; description: string; eyebrow?: string }>();
 </script>
 <template>
- <div class="mb-8"><p v-if="eyebrow" class="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-teal-700">{{ eyebrow }}</p><h1 class="text-3xl font-semibold tracking-tight">{{ title }}</h1><p class="mt-3 max-w-2xl text-sm leading-6 text-slate-500">{{ description }}</p></div>
+    <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
+        <div>
+            <h1 class="text-[25px] font-semibold leading-tight tracking-tight">{{ title }}</h1>
+            <p class="mt-2 max-w-3xl text-sm text-secondary-foreground">{{ description }}</p>
+        </div>
+        <slot />
+    </div>
 </template>

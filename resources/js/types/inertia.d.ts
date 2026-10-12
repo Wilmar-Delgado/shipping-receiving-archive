@@ -1,5 +1,5 @@
-import type { Auth } from './index';
 import '@inertiajs/core';
+import type { Auth } from './index';
 declare module '@inertiajs/core' {
     interface PageProps {
         auth: Auth;

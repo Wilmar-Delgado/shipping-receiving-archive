@@ -3,7 +3,7 @@ import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { type NavItem } from '@/types';
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 
 const sidebarNavItems: NavItem[] = [
     {
@@ -20,11 +20,11 @@ const sidebarNavItems: NavItem[] = [
     },
 ];
 
-const currentPath = window.location.pathname;
+const page = usePage();
 </script>
 
 <template>
-    <div class="px-4 py-6">
+    <div class="archive-panel p-6">
         <Heading title="Settings" description="Manage your profile and account settings" />
 
         <div class="flex flex-col space-y-8 md:space-y-0 lg:flex-row lg:space-x-12 lg:space-y-0">
@@ -34,7 +34,7 @@ const currentPath = window.location.pathname;
                         v-for="item in sidebarNavItems"
                         :key="item.href"
                         variant="ghost"
-                        :class="['w-full justify-start', { 'bg-muted': currentPath === item.href }]"
+                        :class="['w-full justify-start', { 'bg-muted': page.url.split('?')[0] === item.href }]"
                         as-child
                     >
                         <Link :href="item.href">

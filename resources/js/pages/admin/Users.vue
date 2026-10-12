@@ -1,35 +1,167 @@
 <script setup lang="ts">
-import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
-import { ref } from 'vue';
-import ArchiveLayout from '@/layouts/ArchiveLayout.vue';
+import ArchiveModal from '@/components/ArchiveModal.vue';
 import ArchivePageHeading from '@/components/ArchivePageHeading.vue';
+import ArchivePagination from '@/components/ArchivePagination.vue';
+import DocumentStatusBadge from '@/components/DocumentStatusBadge.vue';
 import InputError from '@/components/InputError.vue';
-interface User { id: number; name: string; email: string; role: string; is_active: boolean }
-defineProps<{ users: { data: User[]; links: { url: string | null; label: string; active: boolean }[] } }>();
+import ArchiveLayout from '@/layouts/ArchiveLayout.vue';
+import type { DocumentPage } from '@/types/archive';
+import { Head, router, useForm, usePage } from '@inertiajs/vue3';
+import { UserPlus } from 'lucide-vue-next';
+import { nextTick, ref } from 'vue';
+interface User {
+    id: number;
+    name: string;
+    email: string;
+    role: string;
+    is_active: boolean;
+}
+defineProps<{ users: DocumentPage<User> }>();
 const currentId = (usePage().props.auth as { user: User }).user.id;
-const form = useForm({ name: '', email: '', role: 'staff', password: '', password_confirmation: '' });
+const form = useForm({ name: '', email: '', role: 'staff', password: '' });
+const creating = ref(false);
+const createButton = ref<HTMLButtonElement | null>(null);
 const busy = ref<number | null>(null);
-const submit = () => form.post('/admin/users', { onSuccess: () => form.reset() });
+function close() {
+    if (form.processing) return;
+    creating.value = false;
+    form.reset();
+    form.clearErrors();
+}
+const submit = () =>
+    form
+        .transform((data) => ({ ...data, password_confirmation: data.password }))
+        .post('/admin/users', {
+            preserveScroll: true,
+            onSuccess: () => {
+                creating.value = false;
+                form.reset();
+                form.clearErrors();
+                void nextTick(() => createButton.value?.focus());
+            },
+        });
 const toggle = (user: User) => {
- busy.value = user.id;
- router.patch('/admin/users/' + user.id, { is_active: !user.is_active }, { preserveScroll: true, onFinish: () => busy.value = null });
+    busy.value = user.id;
+    router.patch('/admin/users/' + user.id, { is_active: !user.is_active }, { preserveScroll: true, onFinish: () => (busy.value = null) });
 };
 </script>
 <template>
- <Head title="Users" />
- <ArchiveLayout title="Users" section="Administration">
-  <ArchivePageHeading title="Manage your team" description="Create accounts and control access to the archive. Only administrators can manage users." eyebrow="Administration" />
-  <div class="grid items-start gap-6 xl:grid-cols-[1fr_340px]">
-   <section class="overflow-hidden rounded-xl border border-slate-200 bg-white"><h2 class="border-b border-slate-100 px-6 py-5 font-semibold">Team members</h2><div class="overflow-x-auto"><table class="w-full text-left text-sm"><thead class="bg-slate-50 text-xs text-slate-500"><tr><th class="px-6 py-4">User</th><th class="p-4">Role</th><th class="p-4">Status</th><th class="p-4"><span class="sr-only">Actions</span></th></tr></thead><tbody><tr v-for="user in users.data" :key="user.id" class="border-t border-slate-100"><td class="px-6 py-5"><p class="font-medium">{{ user.name }}</p><p class="mt-1 text-xs text-slate-500">{{ user.email }}</p></td><td class="p-4 capitalize text-slate-500">{{ user.role }}</td><td class="p-4"><span :class="['rounded-full px-2.5 py-1 text-xs', user.is_active ? 'bg-teal-50 text-teal-700' : 'bg-slate-100 text-slate-500']">{{ user.is_active ? 'Active' : 'Inactive' }}</span></td><td class="p-4"><span v-if="user.id === currentId" class="text-xs text-slate-400">You</span><button v-else :disabled="busy !== null" class="text-xs font-medium text-teal-700 disabled:opacity-50" :aria-label="(user.is_active ? 'Deactivate ' : 'Activate ') + user.name" @click="toggle(user)">{{ user.is_active ? 'Deactivate' : 'Activate' }}</button></td></tr></tbody></table></div>
-   <nav v-if="users.links.length > 3" aria-label="User pagination" class="flex flex-wrap gap-2 border-t border-slate-100 p-4"><template v-for="(link, index) in users.links" :key="index"><Link v-if="link.url" :href="link.url" :class="['rounded px-3 py-2 text-xs', link.active ? 'bg-teal-700 text-white' : 'bg-slate-50 text-slate-600']"><span v-html="link.label" /></Link><span v-else class="px-3 py-2 text-xs text-slate-300" v-html="link.label" /></template></nav></section>
-   <section class="rounded-xl border border-slate-200 bg-white p-6"><h2 class="font-semibold">Create user</h2><p class="mt-2 text-xs leading-5 text-slate-500">New accounts are active immediately. Share the initial password through your approved internal channel.</p><form class="mt-6 space-y-4" @submit.prevent="submit">
-    <div><label for="name" class="text-xs font-medium">Full name</label><input id="name" v-model="form.name" required maxlength="255" autocomplete="name" class="mt-1.5 w-full rounded-lg border-slate-200 text-sm" /><InputError :message="form.errors.name" /></div>
-    <div><label for="email" class="text-xs font-medium">Email</label><input id="email" v-model="form.email" type="email" required autocomplete="email" class="mt-1.5 w-full rounded-lg border-slate-200 text-sm" /><InputError :message="form.errors.email" /></div>
-    <div><label for="role" class="text-xs font-medium">Role</label><select id="role" v-model="form.role" class="mt-1.5 w-full rounded-lg border-slate-200 text-sm"><option value="staff">Staff</option><option value="admin">Admin</option></select><InputError :message="form.errors.role" /></div>
-    <div><label for="password" class="text-xs font-medium">Initial password</label><input id="password" v-model="form.password" type="password" required minlength="12" autocomplete="new-password" class="mt-1.5 w-full rounded-lg border-slate-200 text-sm" /><p class="mt-1 text-xs text-slate-400">At least 12 characters.</p><InputError :message="form.errors.password" /></div>
-    <div><label for="password_confirmation" class="text-xs font-medium">Confirm password</label><input id="password_confirmation" v-model="form.password_confirmation" type="password" required autocomplete="new-password" class="mt-1.5 w-full rounded-lg border-slate-200 text-sm" /></div>
-    <button :disabled="form.processing" class="w-full rounded-lg bg-teal-700 px-4 py-3 text-sm font-semibold text-white hover:bg-teal-800 disabled:opacity-50">{{ form.processing ? 'Creating…' : 'Create user' }}</button>
-   </form></section>
-  </div>
- </ArchiveLayout>
+    <Head title="Users" />
+    <ArchiveLayout title="Users" section="Administration">
+        <ArchivePageHeading
+            title="Manage your team"
+            description="Create accounts and control access to the archive. Only administrators can manage users."
+            eyebrow="Administration"
+        >
+            <button ref="createButton" type="button" class="archive-button-primary" @click="creating = true">
+                <UserPlus :size="16" />Create User
+            </button>
+        </ArchivePageHeading>
+        <section class="archive-panel">
+            <header class="archive-panel-heading">
+                <h2 class="text-sm font-semibold">Team members</h2>
+                <p class="text-xs text-muted-foreground">{{ users.total }} accounts</p>
+            </header>
+            <div class="overflow-x-auto" tabindex="0" role="region" aria-label="Team members table">
+                <table class="archive-table min-w-[580px]">
+                    <thead>
+                        <tr>
+                            <th class="w-[40%]">User</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th class="text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="user in users.data" :key="user.id">
+                            <td>
+                                <p class="font-semibold">{{ user.name }}</p>
+                                <p class="mt-1 break-words text-xs text-muted-foreground">{{ user.email }}</p>
+                            </td>
+                            <td class="capitalize text-secondary-foreground">{{ user.role }}</td>
+                            <td>
+                                <DocumentStatusBadge :label="user.is_active ? 'Active' : 'Inactive'" :tone="user.is_active ? 'teal' : 'neutral'" />
+                            </td>
+                            <td class="text-right">
+                                <span v-if="user.id === currentId" class="text-xs text-muted-foreground">You</span
+                                ><button
+                                    v-else
+                                    type="button"
+                                    :disabled="busy !== null"
+                                    class="archive-button"
+                                    :aria-label="(user.is_active ? 'Deactivate ' : 'Activate ') + user.name"
+                                    @click="toggle(user)"
+                                >
+                                    {{ user.is_active ? 'Deactivate' : 'Activate' }}
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <ArchivePagination :links="users.links" :total="users.total" :from="users.from" :to="users.to" />
+        </section>
+        <ArchiveModal
+            :open="creating"
+            title="Create User"
+            description="New accounts are active immediately. Share the initial password through your approved internal channel."
+            @close="close"
+        >
+            <form class="space-y-4 p-5" @submit.prevent="submit">
+                <div>
+                    <label for="create-name" class="mb-1.5 block text-xs font-medium">Full name</label
+                    ><input
+                        id="create-name"
+                        v-model="form.name"
+                        required
+                        maxlength="255"
+                        autocomplete="name"
+                        class="archive-field w-full"
+                        :aria-invalid="!!form.errors.name"
+                        aria-describedby="create-name-error"
+                    /><InputError id="create-name-error" :message="form.errors.name" />
+                </div>
+                <div>
+                    <label for="create-email" class="mb-1.5 block text-xs font-medium">Email</label
+                    ><input
+                        id="create-email"
+                        v-model="form.email"
+                        type="email"
+                        required
+                        autocomplete="email"
+                        class="archive-field w-full"
+                        :aria-invalid="!!form.errors.email"
+                        aria-describedby="create-email-error"
+                    /><InputError id="create-email-error" :message="form.errors.email" />
+                </div>
+                <div>
+                    <label for="create-role" class="mb-1.5 block text-xs font-medium">Role</label
+                    ><select id="create-role" v-model="form.role" class="archive-field w-full">
+                        <option value="staff">Staff</option>
+                        <option value="admin">Admin</option></select
+                    ><InputError id="create-role-error" :message="form.errors.role" />
+                </div>
+                <div>
+                    <label for="create-password" class="mb-1.5 block text-xs font-medium">Initial password</label
+                    ><input
+                        id="create-password"
+                        v-model="form.password"
+                        type="password"
+                        required
+                        minlength="12"
+                        autocomplete="new-password"
+                        class="archive-field w-full"
+                        :aria-invalid="!!form.errors.password"
+                        aria-describedby="create-password-help create-password-error"
+                    />
+                    <p id="create-password-help" class="mt-1 text-xs text-muted-foreground">At least 12 characters.</p>
+                    <InputError id="create-password-error" :message="form.errors.password" />
+                </div>
+                <div class="flex justify-end gap-2 border-t border-border pt-4">
+                    <button type="button" class="archive-button" :disabled="form.processing" @click="close">Cancel</button
+                    ><button :disabled="form.processing" class="archive-button-primary">{{ form.processing ? 'Creatingâ€¦' : 'Create User' }}</button>
+                </div>
+            </form>
+        </ArchiveModal>
+    </ArchiveLayout>
 </template>

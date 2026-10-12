@@ -14,6 +14,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class ArchiveFoundationTest extends TestCase
@@ -80,7 +81,7 @@ class ArchiveFoundationTest extends TestCase
         $document = Document::factory()->create(['document_date' => '2026-09-14', 'handled_on' => null]);
         $reference = $document->references()->create(['kind' => 'po', 'value' => '  po-123  ']);
         $file = DocumentFile::factory()->create(['document_id' => $document->id]);
-        $this->assertSame('PO-123', $reference->normalized_value);
+        $this->assertSame('PO123', $reference->normalized_value);
         $this->assertSame('2026-09-14', $document->document_date->format('Y-m-d'));
         $this->assertNull($document->handled_on);
         $this->assertNotEmpty($document->uuid);
@@ -128,13 +129,14 @@ class ArchiveFoundationTest extends TestCase
 
     public function test_demo_seeder_is_repeatable_and_fictional(): void
     {
+        Storage::fake('documents');
         $this->seed(DemoSeeder::class);
         $this->seed(DemoSeeder::class);
         $this->assertDatabaseCount('users', 2);
-        $this->assertDatabaseCount('parties', 2);
-        $this->assertDatabaseCount('documents', 6);
-        $this->assertDatabaseCount('document_references', 12);
-        $this->assertDatabaseCount('document_files', 0);
+        $this->assertDatabaseCount('parties', 4);
+        $this->assertDatabaseCount('documents', 54);
+        $this->assertDatabaseCount('document_references', 180);
+        $this->assertDatabaseCount('document_files', 18);
     }
 
     public function test_mysql_database_guard_rejects_an_unrelated_database(): void

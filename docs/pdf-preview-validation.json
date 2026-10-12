@@ -1,0 +1,86 @@
+[
+  {
+    "filename": "DEMO-vendor-packing-slips-1.pdf",
+    "pages": 1,
+    "strict_parse": "passed",
+    "text_extract": true,
+    "poppler": "passed"
+  },
+  {
+    "filename": "DEMO-vendor-packing-slips-9.pdf",
+    "pages": 1,
+    "strict_parse": "passed",
+    "text_extract": true,
+    "poppler": "passed"
+  },
+  {
+    "filename": "DEMO-material-test-reports-1.pdf",
+    "pages": 1,
+    "strict_parse": "passed",
+    "text_extract": true,
+    "poppler": "passed"
+  },
+  {
+    "filename": "DEMO-material-test-reports-9.pdf",
+    "pages": 1,
+    "strict_parse": "passed",
+    "text_extract": true,
+    "poppler": "passed"
+  },
+  {
+    "filename": "DEMO-rmas-1.pdf",
+    "pages": 1,
+    "strict_parse": "passed",
+    "text_extract": true,
+    "poppler": "passed"
+  },
+  {
+    "filename": "DEMO-rmas-9.pdf",
+    "pages": 1,
+    "strict_parse": "passed",
+    "text_extract": true,
+    "poppler": "passed"
+  },
+  {
+    "filename": "DEMO-customer-packing-slips-1.pdf",
+    "pages": 1,
+    "strict_parse": "passed",
+    "text_extract": true,
+    "poppler": "passed"
+  },
+  {
+    "filename": "DEMO-customer-packing-slips-9.pdf",
+    "pages": 1,
+    "strict_parse": "passed",
+    "text_extract": true,
+    "poppler": "passed"
+  },
+  {
+    "filename": "DEMO-waybills-1.pdf",
+    "pages": 1,
+    "strict_parse": "passed",
+    "text_extract": true,
+    "poppler": "passed"
+  },
+  {
+    "filename": "DEMO-waybills-9.pdf",
+    "pages": 1,
+    "strict_parse": "passed",
+    "text_extract": true,
+    "poppler": "passed"
+  },
+  {
+    "filename": "DEMO-job-routers-1.pdf",
+    "pages": 1,
+    "strict_parse": "passed",
+    "text_extract": true,
+    "poppler": "passed"
+  },
+  {
+    "filename": "DEMO-job-routers-9.pdf",
+    "pages": 1,
+    "strict_parse": "passed",
+    "text_extract": true,
+    "poppler": "passed"
+  }
+]

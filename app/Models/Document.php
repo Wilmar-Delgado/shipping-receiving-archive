@@ -47,7 +47,7 @@ class Document extends Model
 
     public function references(): HasMany
     {
-        return $this->hasMany(DocumentReference::class);
+        return $this->hasMany(DocumentReference::class)->orderBy('id');
     }
 
     public function files(): HasMany

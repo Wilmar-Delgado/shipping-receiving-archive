@@ -18,7 +18,7 @@ class UserController extends Controller
     {
         Gate::authorize('viewAny', User::class);
 
-        return Inertia::render('admin/Users', ['users' => User::orderBy('name')->paginate(20)->through(fn (User $user) => $user->only('id', 'name', 'email', 'role', 'is_active'))]);
+        return Inertia::render('admin/Users', ['users' => User::orderBy('name')->orderBy('id')->paginate(10)->withQueryString()->through(fn (User $user) => $user->only('id', 'name', 'email', 'role', 'is_active'))]);
     }
 
     public function store(Request $request): RedirectResponse

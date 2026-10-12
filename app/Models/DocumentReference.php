@@ -15,7 +15,7 @@ class DocumentReference extends Model
 
     protected static function booted(): void
     {
-        static::saving(fn (DocumentReference $reference) => $reference->normalized_value = Normalization::value($reference->value));
+        static::saving(fn (DocumentReference $reference) => $reference->normalized_value = Normalization::reference($reference->value));
     }
 
     public function document(): BelongsTo

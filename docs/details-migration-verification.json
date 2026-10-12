@@ -1,0 +1,8 @@
+{
+    "database": "shipping_receiving_archive",
+    "rma_id": 3,
+    "rma_slug": "return-merchandise-authorizations",
+    "documents": 54,
+    "private_files": 18,
+    "preservation": "Only the RMA slug changed; all other row values and private file bytes unchanged."
+}

@@ -1,22 +1,37 @@
 <?php
 
 use App\Http\Controllers\Admin\UserController;
-use App\Models\Document;
-use App\Models\DocumentType;
-use Illuminate\Support\Facades\Gate;
+use App\Http\Controllers\ArchiveController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\InboxController;
+use App\Support\ArchiveCategories;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 Route::redirect('/', '/dashboard')->name('home');
 Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', fn () => Inertia::render('archive/Dashboard'))->name('dashboard');
-    Route::get('/inbox', fn () => Inertia::render('archive/Placeholder', ['title' => 'Inbox', 'section' => 'Workspace', 'description' => 'A dedicated place to review incoming scans before filing.']))->name('inbox');
-    Route::get('/search', fn () => Inertia::render('archive/Placeholder', ['title' => 'Global Search', 'section' => 'Workspace', 'description' => 'Find records across receiving, shipping, and job routers.']))->name('search');
-    Route::get('/archive/{documentType:slug}', function (DocumentType $documentType) {
-        Gate::authorize('viewAny', Document::class);
+    Route::get('/dashboard', DashboardController::class)->name('dashboard');
+    Route::get('/inbox', [InboxController::class, 'index'])->name('inbox');
+    Route::post('/inbox', [InboxController::class, 'store'])->middleware('throttle:30,1')->name('inbox.store');
+    Route::get('/documents/{document:uuid}', [DocumentController::class, 'show'])->name('documents.show');
+    Route::patch('/documents/{document:uuid}', [DocumentController::class, 'update'])->name('documents.update');
+    Route::post('/documents/{document:uuid}/file', [DocumentController::class, 'file'])->name('documents.file');
+    Route::post('/documents/{document:uuid}/discard', [DocumentController::class, 'discard'])->name('documents.discard');
+    Route::get('/documents/{document:uuid}/preview', [DocumentController::class, 'preview'])->name('documents.preview');
+    Route::get('/documents/{document:uuid}/download', [DocumentController::class, 'download'])->name('documents.download');
+    Route::get('/search', [ArchiveController::class, 'search'])->name('search');
+    Route::get('/archive/rmas', function (Request $request) {
+        $query = $request->getQueryString();
 
-        return Inertia::render('archive/Placeholder', ['title' => $documentType->name, 'section' => ucfirst($documentType->section), 'description' => 'A separate archive for '.strtolower($documentType->name).'.']);
-    })->name('archive.category');
+        return redirect('/archive/'.ArchiveCategories::RMA_SLUG.($query ? '?'.$query : ''), 301);
+    })->name('archive.rmas.legacy');
+    Route::get('/archive/return-merchandise-authorization', function (Request $request) {
+        $query = $request->getQueryString();
+
+        return redirect('/archive/'.ArchiveCategories::RMA_SLUG.($query ? '?'.$query : ''), 301);
+    })->name('archive.rma.singular');
+    Route::get('/archive/{documentType:slug}', [ArchiveController::class, 'category'])->name('archive.category');
     Route::get('/admin/users', [UserController::class, 'index'])->name('admin.users.index');
     Route::post('/admin/users', [UserController::class, 'store'])->name('admin.users.store');
     Route::patch('/admin/users/{user}', [UserController::class, 'update'])->name('admin.users.update');
